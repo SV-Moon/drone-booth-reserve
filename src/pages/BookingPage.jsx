@@ -30,7 +30,9 @@ export default function BookingPage() {
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-radar-cyan">
           Drone Simulation Control Tower
         </p>
-        <h1 className="mt-1 text-2xl font-bold text-slate-100 sm:text-3xl">부스 예약 시스템</h1>
+        <h1 className="mt-1 text-2xl font-bold text-slate-100 sm:text-3xl">
+          삼성중공업 생산AX/PI팀 드론 시뮬레이션 부스 예약 시스템
+        </h1>
         <p className="mt-2 text-sm text-slate-400">
           Booth A / Booth B · 화·수·목 13:00~17:00 (1시간 단위)
         </p>
@@ -70,8 +72,9 @@ export default function BookingPage() {
         </div>
       )}
 
-      <footer className="mt-10 text-center">
-        <a href="#admin" className="text-xs text-slate-500 underline hover:text-slate-300">
+      <footer className="mt-10 text-center text-xs text-slate-500">
+        <p>관리자 : 생산AX/PI팀 생산자동화그룹 황** 프로 (내선번호 14162)</p>
+        <a href="#admin" className="mt-2 inline-block underline hover:text-slate-300">
           관리자 화면
         </a>
       </footer>
