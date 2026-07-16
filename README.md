@@ -125,3 +125,60 @@ GitHub Actions가 빌드 시점에 Supabase 접속 정보와 관리자 비밀번
 
 - 고객: 메인 화면(`/`)에서 날짜(화/수/목만 가능) → 부스/시간 선택 → 이름/연락처 입력 → 예약.
 - 관리자: 화면 하단 "관리자 화면" 링크(`/#admin`) → 비밀번호 입력 → 날짜별 예약 확인/취소.
+
+## 6. 예약 알림 메일 설정 (선택)
+
+예약이 등록되면 관리자 메일로 자동 알림을 보내는 기능입니다. 서버 없이 Supabase의
+Database Webhook + Edge Function으로 동작합니다.
+
+```
+bookings INSERT → Database Webhook → Edge Function(notify-booking) → Resend API → 관리자 메일
+```
+
+### 6-1. Resend(메일 발송 서비스) 준비
+
+1. [resend.com](https://resend.com) 가입 — **알림을 받을 관리자 이메일 주소로 가입**하세요.
+   (도메인을 인증하지 않으면 Resend는 *가입한 본인 주소로만* 발송이 허용됩니다. 관리자 1명에게만
+   보내는 이 프로젝트에는 이 방식으로 충분합니다.)
+2. **API Keys → Create API Key** 로 키를 발급받아 복사합니다. (`re_...` 형식)
+
+### 6-2. Edge Function 배포
+
+Supabase 대시보드 **Edge Functions → Deploy a new function** 에서 `notify-booking` 이라는
+이름으로 만들고, [`supabase/functions/notify-booking/index.ts`](supabase/functions/notify-booking/index.ts)
+내용을 붙여넣어 배포합니다. (CLI를 쓴다면 `supabase functions deploy notify-booking`)
+
+### 6-3. Secret 등록
+
+Supabase 대시보드 **Edge Functions → Secrets** 에서 아래 값을 등록합니다.
+
+| 이름 | 값 |
+|------|-----|
+| `RESEND_API_KEY` | 6-1에서 발급받은 Resend API 키 |
+| `ADMIN_EMAIL` | 알림 받을 관리자 이메일 주소 |
+| `NOTIFY_SECRET` | 아무 문자열이나 직접 정함 (웹훅 위조 방지용, 6-4에서 동일하게 사용) |
+| `FROM_EMAIL` | (선택) 미설정 시 `onboarding@resend.dev` 사용 |
+
+### 6-4. Database Webhook 연결
+
+Supabase 대시보드 **Database → Webhooks → Create a new hook**:
+
+- **Table**: `bookings`, **Events**: `Insert` 만 체크
+- **Type**: HTTP Request / **Method**: `POST`
+- **URL**: `https://<프로젝트ref>.supabase.co/functions/v1/notify-booking`
+- **HTTP Headers** 에 아래 두 개 추가
+  - `x-notify-secret` : `NOTIFY_SECRET`에 넣은 것과 **똑같은 값**
+  - `Content-Type` : `application/json`
+
+### 6-5. 테스트 및 주의사항
+
+실제로 예약을 1건 넣어보고 메일이 도착하는지 확인하세요. 안 온다면
+**Edge Functions → Logs** 에서 오류를 확인합니다.
+
+> **회사 메일 스팸 필터**: 사내 메일 서버가 외부 자동메일을 차단·격리할 수 있습니다.
+> 메일이 오지 않으면 먼저 **스팸함**을 확인하고, 그래도 없으면 개인 메일 주소로
+> `ADMIN_EMAIL`을 바꿔 테스트해 보세요.
+
+> **개인정보 보관 주의**: 알림 메일에는 신청자의 이름·전화번호가 포함됩니다. 동의서에 고지한
+> "예약 기간 만료 후 지체 없이 파기" 원칙에 맞추려면, **지난 예약의 알림 메일도 주기적으로
+> 삭제**해야 합니다.

@@ -117,6 +117,8 @@ supabase/schema.sql       # DB 스키마(bookings, consents) + RLS + Realtime SQ
 - [x] **개인정보 수집·이용 동의서**(예약 모달에서 필수 동의 → `consents` 테이블 저장,
       이름+전화번호 동일 시 최신 동의만 유지, 관리자 화면에서 동의 내역 조회)
 - [x] GitHub Actions 자동 배포 워크플로우
+- [ ] **예약 알림 메일**(Edge Function 코드는 작성 완료, Supabase 배포·Resend 연동은 수동 설정 필요
+      → README "6. 예약 알림 메일 설정" 참고)
 
 ## 9. Claude Code로 작업할 때 참고사항(개인 설정)
 
